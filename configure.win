@@ -1,0 +1,33 @@
+#!/bin/sh
+
+echo "  checking GDWIN32 ..."
+if [ -z "$GDWIN32" ]; then
+    echo "*** WARNING: GDWIN32 environment variable is not set!" >&2
+    echo "             Using C:/gdwin32 as a fall-back" >&2
+    # Note: this applies to the detection here only!
+    # The actual fall-back path must be also set in Makevars.win!
+    GDWIN32=C:/gdwin32
+fi
+
+if [ ! -e "$GDWIN32/gd.h" ]; then
+    echo "*** ERROR: $GDWIN32/gd.h is missing!" >&2
+    echo "" >&2
+    echo " Download gdwin32.zip from www.boutell.com/gd/, unpack and set" >&2
+    echo " GDWIN32 correspondingly." >&2
+    echo "" >&2
+    exit 1
+fi
+
+if [ ! -e "$GDWIN32/bgd.dll" ]; then
+    echo "*** ERROR: $GDWIN32/bgd.dll is missing!" >&2
+    echo "" >&2
+    echo " Download gdwin32.zip from www.boutell.com/gd/, unpack and set" >&2
+    echo " GDWIN32 correspondingly." >&2
+    echo "" >&2
+    exit 1
+fi
+
+echo "  copying BGD.DLL into GDD package ..."
+mkdir -p inst/libs
+cp "$GDWIN32/bgd.dll" inst/libs/
+echo "  configuration done."

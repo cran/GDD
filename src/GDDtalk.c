@@ -4,6 +4,12 @@
 
 #include <gdfonts.h>
 
+/* we need registry and win32 API for finding the system fonts folder */
+#ifdef WIN32
+#include <windows.h>
+#include <winreg.h>
+#endif
+
 /* Device Driver Actions */
 
 #if R_VERSION < 0x10900
@@ -17,7 +23,7 @@
 
 static char *ftprefix=0;
 
-static char *font_file[4] = {0,0,0,0};
+static char *font_file[8] = {0,0,0,0,0,0,0,0};
 
 static void GDD_Activate(NewDevDesc *dd);
 static void GDD_Circle(double x, double y, double r,
@@ -143,7 +149,7 @@ static void sendGC(GDDDesc *xd, R_GE_gcontext *gc, int sendAll) {
 			if (fc!='/' && fc!='\\') strcat(fallback_font, "/");
 			strcat(fallback_font, "blue highway free.ttf");
 		}
-		if (gc->fontface>0 && gc->fontface<=4 && font_file[gc->fontface-1])
+		if (gc->fontface>0 && gc->fontface<=5 && font_file[gc->fontface-1])
 			xd->gd_ftfont = font_file[gc->fontface-1];
 		else {
 			if (font_file[0])
@@ -541,20 +547,62 @@ void gddSetFTFontPath(char **ftfp) {
 	strcpy(ftprefix, *ftfp);
 	if (ftprefix[strlen(ftprefix)-1]!='/') strcat(ftprefix, "/");												
 	fpl=strlen(ftprefix);
-	{ /* read mapping from fontface (1..4 -> n,b,i,bi) to TTF files */
+
+#ifdef WIN32
+	/* In Windows we need to find the Fonts path and set WINDOWSFONTS */
+	{
+		char rbuf[512];
+		DWORD t,s=511;
+		HKEY k;
+		char *key="Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+		char *fpath=0;
+
+		rbuf[511]=0;
+		if (RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_QUERY_VALUE,&k)==ERROR_SUCCESS) {
+			if (RegQueryValueEx(k,"Fonts",0,&t,rbuf,&s)==ERROR_SUCCESS) {
+				if (strchr(rbuf,'%')) {
+					char b2[512];
+					int r = ExpandEnvironmentStrings(rbuf, b2, 512);
+					if (r>0 && r<512) strcpy(rbuf, b2);
+				}
+				fpath=rbuf;
+			}
+			RegCloseKey(k);
+		}
+		if (!fpath) {
+			int l = GetWindowsDirectory(rbuf, 480);
+			if (l>0 && l<480) {
+				strcat(rbuf, "\\Fonts");
+				if (GetFileAttributes(rbuf)!=0xffffffff)
+					fpath=rbuf;
+			}
+		}
+		if (fpath && *fpath) {
+			char pe[530];
+			strcpy(pe, "WINDOWSFONTS=");
+			strcat(pe, fpath);
+			putenv(pe);
+#ifdef JGD_DEBUG
+			printf("setting WINDOWSFONTS=%s\n", fpath);
+#endif
+		}
+	}
+#endif
+	
+	{ /* read mapping from fontface (1..5 -> n,b,i,bi,sym) to TTF files */
 		FILE *f;
 		int matched=0;
 		char *buf = (char*) malloc(strlen(ftprefix)+512);
 		strcpy(buf, ftprefix);
 		strcat(buf, "basefont.mapping");
-		memset(font_file, 0, sizeof(char*)*4);
+		memset(font_file, 0, sizeof(char*)*8);
 		f = fopen(buf, "r");
 #ifdef JGD_DEBUG
 		printf("Trying to read mappings from \"%s\"\n", buf);
 #endif
 		if (f) {
 			buf[255]=0;
-			while (matched<4 && fgets(buf, 256, f)) {
+			while (matched<5 && fgets(buf, 256, f)) {
 				int j=strlen(buf);
 				while (j>0 && (buf[j-1]=='\r' || buf[j-1]=='\n')) j--;
 				buf[j]=0;
@@ -563,9 +611,10 @@ void gddSetFTFontPath(char **ftfp) {
 				else if (!strncmp(buf,"base.bold:",10)) fty=1;
 				else if (!strncmp(buf,"base.ital:",10)) fty=2;
 				else if (!strncmp(buf,"base.bita:",10)) fty=3;
+				else if (!strncmp(buf,"symbol:",7)) fty=4;
 				if (fty!=-1 && j>10) {
 					FILE *ff=0;
-					char *fb=buf+10;
+					char *fb=strchr(buf,':')+1;
 					while (*fb=='\t' || *fb==' ') fb++;
 					j=strlen(fb);
 					
@@ -593,12 +642,54 @@ void gddSetFTFontPath(char **ftfp) {
 #endif
 					}
 
-if (*fb && *fb!='/') {
+#ifdef WIN32
+					/* in Windows we expand env variables */
+					if (strchr(fb, '%')) {
+						char exp[512];
+						char *c;
+						strcpy(exp, fb);
+#ifdef JGD_DEBUG
+						printf("  (Win32) font path in need to be expanded: \"%s\"\n", fb);
+#endif
+						c = strchr(exp, '%');
+						while (c) {
+							char *e = strchr(c+1, '%');
+							if (e) {
+								char *v;
+								*e=0;
+								v = getenv(c+1);
+#ifdef JGD_DEBUG
+								printf("  (Win32) expand \"%s\" to \"%s\"\n", c+1, v?v:"<not set>");
+#endif
+								if (v) { /* env var found */
+									int l = strlen(v);
+									if (l>500-(c-exp)) *e='%'; /* expansion is too long */
+									else {
+										memmove(c+l, e+1, strlen(e)); /* incl. tariling \0 */
+										memcpy(c, v, l);
+										e = c + l - 1; /* make sure e is just at the end of the new string */
+									}
+								} else *e='%';
+							}
+							c = e;
+						}
+						strcpy(fb, exp);
+					}
+
+					if (*fb && *fb!='/' && *fb!='\\' && fb[1]!=':') {
 						memmove(fb+fpl, fb, j+1);
 						memcpy(fb, ftprefix, fpl);
 					}
+
+#else
+					if (*fb && *fb!='/') {
+						memmove(fb+fpl, fb, j+1);
+						memcpy(fb, ftprefix, fpl);
+					}
+#endif /* WIN32 */
+
 #ifdef JGD_DEBUG
-                    printf("- candidate type=%d, file=\"%s\"\n", fty, fb);
+                    printf("- candidate type=%d, file=\"%s\"\n", fty+1, fb);
 #endif
                     if (*fb) ff = fopen(fb, "rb"); else ff = 0;
 					if (ff) {
@@ -626,8 +717,8 @@ SEXP gdd_look_up_font(SEXP f)
 	int i=0;
 	SEXP rv;
 	if (f==R_NilValue) {
-		PROTECT(rv = allocVector(STRSXP, 4));
-		while (i<4) {
+		PROTECT(rv = allocVector(STRSXP, 5));
+		while (i<5) {
 			if (font_file[i])
 				SET_STRING_ELT(rv, i, mkChar(font_file[i]));
 			else

@@ -1,9 +1,14 @@
-# **** MODIFY THE FOLLOWING LINE BEFORE COMPILING ****
-GDWIN32=N:/gdwin32
+# *** PLEASE SET "GDWIN32" TO PATH LEADING TO GDWIN32 !! ***
 
-# normally you don't need to touch the following lines
-PKG_CFLAGS+= -I$(GDWIN32) -DHAS_FTL
-PKG_LIBS+= -lbgd -L$(GDWIN32)
+# this is just a fallback
+ifeq ($(GDWIN32),)
+GDWIN32=C:/gdwin32
+endif
 
-# ToDo: copy $(GDWIN32)/bgd.dll into the same directory as gdd.dll
-# how to do it?!?
+ifneq ($(DEBUG),)
+PKG_CFLAGS+= -g -DJGD_DEBUG
+endif
+
+PKG_CFLAGS+= '-I$(GDWIN32)' -DHAS_FTL -DWIN32
+PKG_LIBS+= -lbgd '-L$(GDWIN32)'
+
