@@ -1,5 +1,5 @@
 Package: GDD
-Version: 0.1-11
+Version: 0.1-12
 Title: GD device for creating bitmap graphics as jpeg, png or gif files using gd library
 Author: Simon Urbanek <Simon.Urbanek@r-project.org>
 Maintainer: Simon Urbanek <Simon.Urbanek@r-project.org>

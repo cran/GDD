@@ -16,6 +16,12 @@
 #error This GDD needs at least R version 1.9.0
 #endif
 
+#if R_GE_version < 4
+#define APICONST
+#else
+#define APICONST const
+#endif
+
 #define R2I(X) ((int)((X)+0.5))
 #define CREDC(C) ((C)&0xff)
 #define CGREENC(C) (((C)&0xff00)>>8)
@@ -60,10 +66,10 @@ static void GDD_Rect(double x0, double y0, double x1, double y1,
 static void GDD_Size(double *left, double *right,
 			 double *bottom, double *top,
 			 NewDevDesc *dd);
-static double GDD_StrWidth(char *str, 
+static double GDD_StrWidth(APICONST char *str, 
 			       R_GE_gcontext *gc,
 			       NewDevDesc *dd);
-static void GDD_Text(double x, double y, char *str,
+static void GDD_Text(double x, double y, APICONST char *str,
 			 double rot, double hadj,
 			 R_GE_gcontext *gc,
 			 NewDevDesc *dd);
@@ -495,7 +501,7 @@ static void GDD_Size(double *left, double *right,  double *bottom, double *top, 
 	*bottom=R2I(gdImageSY(xd->img));
 }
 
-static double GDD_StrWidth(char *str,  R_GE_gcontext *gc,  NewDevDesc *dd)
+static double GDD_StrWidth(APICONST char *str,  R_GE_gcontext *gc,  NewDevDesc *dd)
 {
     GDDDesc *xd = (GDDDesc *) dd->deviceSpecific;
     if(!xd || !xd->img) return strlen(str)*8;
@@ -504,7 +510,7 @@ static double GDD_StrWidth(char *str,  R_GE_gcontext *gc,  NewDevDesc *dd)
 #ifdef HAS_FTL
 	{
 		int br[8];
-		gdImageStringFT(0, br, xd->gd_draw, xd->gd_ftfont, xd->gd_ftsize, 0.0, 0, 0, str);
+		gdImageStringFT(0, br, xd->gd_draw, xd->gd_ftfont, xd->gd_ftsize, 0.0, 0, 0, (char*) str);
 		return (double)((br[2]<0)?-br[2]:br[2]);
 	}
 #else
@@ -512,7 +518,7 @@ static double GDD_StrWidth(char *str,  R_GE_gcontext *gc,  NewDevDesc *dd)
 #endif
 }
 
-static void GDD_Text(double x, double y, char *str,  double rot, double hadj,  R_GE_gcontext *gc,  NewDevDesc *dd)
+static void GDD_Text(double x, double y, APICONST char *str,  double rot, double hadj,  R_GE_gcontext *gc,  NewDevDesc *dd)
 {
     GDDDesc *xd = (GDDDesc *) dd->deviceSpecific;
     if(!xd || !xd->img) return;
@@ -528,7 +534,7 @@ static void GDD_Text(double x, double y, char *str,  double rot, double hadj,  R
 	if (xd->gd_draw!=-1) {
 		int br[8];
 		double rad=rot/180.0*3.141592;
-		gdImageStringFT(0, br, xd->gd_draw, xd->gd_ftfont, xd->gd_ftsize, 0.0, 0, 0, str);
+		gdImageStringFT(0, br, xd->gd_draw, xd->gd_ftfont, xd->gd_ftsize, 0.0, 0, 0, (char*) str);
 		if (hadj!=0.0) {
 			double tw=(double)br[2]; /* string width */
 			x-=cos(rad)*(tw*hadj);
@@ -537,7 +543,7 @@ static void GDD_Text(double x, double y, char *str,  double rot, double hadj,  R
 #ifdef JGD_DEBUG
 		printf("FT text using font \"%s\", size %.1f\n", xd->gd_ftfont, xd->gd_ftsize);
 #endif
-		gdImageStringFT(xd->img, br, xd->gd_draw, xd->gd_ftfont, xd->gd_ftsize, rad, R2I(x), R2I(y), str);
+		gdImageStringFT(xd->img, br, xd->gd_draw, xd->gd_ftfont, xd->gd_ftsize, rad, R2I(x), R2I(y), (char*) str);
 	}
 #else
 #ifdef JGD_DEBUG
@@ -769,7 +775,6 @@ SEXP gdd_look_up_font(SEXP f)
 
 /** fill the R device structure with callback functions */
 void setupGDDfunctions(NewDevDesc *dd) {
-    dd->open = GDD_Open;
     dd->close = GDD_Close;
     dd->activate = GDD_Activate;
     dd->deactivate = GDD_Deactivate;
@@ -791,6 +796,7 @@ void setupGDDfunctions(NewDevDesc *dd) {
     dd->strWidthUTF8 = GDD_StrWidth;
     dd->textUTF8 = GDD_Text;
 #else
+    dd->open = GDD_Open;
     dd->hold = GDD_Hold;
 #endif
 }

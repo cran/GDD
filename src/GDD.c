@@ -103,6 +103,7 @@ int gdd_set_new_device_data(NewDevDesc *dd, double gamma_fac, GDDDesc *xd)
 
     dd->ipr[0] = 1/jGDdpiX;
     dd->ipr[1] = 1/jGDdpiY;
+#if R_GE_version < 4
     dd->asp = jGDasp;
 
     /* Device capabilities */
@@ -115,6 +116,7 @@ int gdd_set_new_device_data(NewDevDesc *dd, double gamma_fac, GDDDesc *xd)
 #else
     dd->canRotateText = FALSE;
     dd->canResizeText = FALSE;
+#endif
 #endif
     dd->canClip = TRUE;
     dd->canHAdj = 2;
@@ -176,11 +178,12 @@ SEXP gdd_create_new_device(SEXP args)
 	if (!(dev = (NewDevDesc*)calloc(1, sizeof(NewDevDesc))))
 	    return R_NilValue;
 
+#if R_GE_version < 4
 	dev->newDevStruct = 1;
 	dev->displayList = R_NilValue;
-
 	dev->savedSnapshot = R_NilValue;
-
+#endif
+	
 	if (!gdd_new_device_driver(dev, type, file, width, height, initps, bgcolor))
 	{
 	    free(dev);

@@ -1,7 +1,7 @@
 #ifndef _DEV_GD_H
 #define _DEV_GD_H
 
-#define GDD_VER 0x00010b /* GDD v0.1-11 */
+#define GDD_VER 0x00010c /* GDD v0.1-12 */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -12,8 +12,8 @@
 
 #include <R.h>
 #include <Rinternals.h>
-#include <R_ext/GraphicsDevice.h>
 #include <R_ext/GraphicsEngine.h>
+#include <R_ext/GraphicsDevice.h>
 #include <gd.h>
 
 /* for compatibility with older R versions */ 
