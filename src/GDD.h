@@ -1,7 +1,7 @@
 #ifndef _DEV_GD_H
 #define _DEV_GD_H
 
-#define GDD_VER 0x000106 /* GDD v0.1-6 */
+#define GDD_VER 0x000107 /* GDD v0.1-7 */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>

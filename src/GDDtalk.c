@@ -443,7 +443,7 @@ static void GDD_Polyline(int n, double *x, double *y,  R_GE_gcontext *gc,  NewDe
 	}
     if (xd->gd_draw!=-1) {
 		gdImageSetAntiAliased (xd->img, xd->gd_draw);
-		gdImagePolygon(xd->img, pt, n, gdAntiAliased);
+		gdImageOpenPolygon(xd->img, pt, n, gdAntiAliased);
 	}
 	free(pt);
 }

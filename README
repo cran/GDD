@@ -16,13 +16,14 @@ the last section in this file on how to get them if they are not
 installed already.
 
 (On Debian systems, use:
-  apt get install msttcorefonts libgd2-xpm-dev
+  apt-get install msttcorefonts libgd2-xpm-dev
 to satisfy all requirements above - other distributions are likely to have
 similar packages available.)
 
 Since GDD 0.1-6 msttcorefonts may not be necessary if fontconfig is
 setup properly and you have other, Helvetica-equivalent True Type font
-in your system.
+in your system. Nevertheless it is still recommended to use TTF fonts
+as they yield better results.
 
 Tested on unix platforms only (Linux and Mac OS X), it may or may not
 work on other systems - given libgd availability. Success/failure
@@ -33,6 +34,12 @@ have development files (headers etc.) also installed. Also note that
 the capabilities of this driver are determined by libgd and not at GDD
 compile time, i.e. if you have libgd without freetype support,
 installing freetype doesn't help unless you update libgd, too.
+
+Window users: GDD was tested successfully on Windows. To install from
+sources, you will have to obtain the GD DLL from:
+ http://www.boutell.com/gd/http/gdwin32.zip
+Unpack, set the path in Makevars.win in the GDD package and install.
+In addition you will have to copy bgd.dll into $R_HOME/library/GDD/libs
 
 --
 

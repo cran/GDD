@@ -1,16 +1,9 @@
-# To compile the Windows version, you need to:
-# - set JAVA_HOME to the JDK root (used for includes only)
-# - have R sources ready and set the corresponding path below
-# in addition if the pre-compiled stuff is not present, then also:
-# - generate libjvm.a in src from JDK's jvm.dll
-# - copy WinRegistry.dll into inst/libs
+# **** MODIFY THE FOLLOWING LINE BEFORE COMPILING ****
+GDWIN32=N:/gdwin32
 
-# **** MODIFY THE FOLLOWING LINES BEFORE COMPILING ****
-JAVA_HOME=D:\\jdk1.4.2_04
-R_SOURCES=/R/R-2.0.0
+# normally you don't need to touch the following lines
+PKG_CFLAGS+= -I$(GDWIN32) -DHAS_FTL
+PKG_LIBS+= -lbgd -L$(GDWIN32)
 
-# normally you don't have to touch this unless you want to add
-# debugging flags like -DRJ_DEBUG or -DRJ_PROFILE to PKG_CFLAGS
-JAVA_INCLUDES=$(JAVA_HOME)/include $(JAVA_HOME)/include/win32
-PKG_CFLAGS= -D_R_ -DWin32 -I$(R_SOURCES)/src/include -I$(RHOME)/src/include $(JAVA_INCLUDES:%=-I%) -Iinclude/Win32
-PKG_LIBS= -ljvm.dll -L$(TOP)/src -L.
+# ToDo: copy $(GDWIN32)/bgd.dll into the same directory as gdd.dll
+# how to do it?!?
