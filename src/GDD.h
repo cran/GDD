@@ -1,7 +1,7 @@
 #ifndef _DEV_GD_H
 #define _DEV_GD_H
 
-#define GDD_VER 0x000108 /* GDD v0.1-8 */
+#define GDD_VER 0x00010b /* GDD v0.1-11 */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -14,9 +14,19 @@
 #include <Rinternals.h>
 #include <R_ext/GraphicsDevice.h>
 #include <R_ext/GraphicsEngine.h>
+#include <gd.h>
+
+/* for compatibility with older R versions */ 
+#if R_GE_version < 4
 #include <Rgraphics.h>
 #include <Rdevices.h>
-#include <gd.h>
+#define GEaddDevice(X) addDevice((DevDesc*)(X))
+#define GEdeviceNumber(X) devNumber((DevDesc*)(X))
+#define GEgetDevice(X) ((GEDevDesc*) GetDevice(X))
+#define ndevNumber(X) devNumber((DevDesc*)(X))
+#define GEkillDevice(X) KillDevice(X)
+#define desc2GEDesc(X) ((DevDesc*) GetDevice(devNumber((DevDesc*) (X))))
+#endif
 
 /* the internal representation of a color in this (R) API is RGBa with a=0 meaning transparent and a=255 meaning opaque (hence a means 'opacity'). previous implementation was different (inverse meaning and 0x80 as NA), so watch out. */
 #if R_VERSION < 0x20000
@@ -55,8 +65,8 @@ typedef struct {
 } GDDDesc;
 
 void      setupGDDfunctions(NewDevDesc *dd);
-Rboolean  GDD_Open(NewDevDesc *dd, GDDDesc *xd,  char *type, char *file, double w, double h, int bgcolor);
-Rboolean  gdd_new_device_driver(DevDesc*, char*, char *, double, double, double, int);
+Rboolean  GDD_Open(NewDevDesc *dd, GDDDesc *xd,  const char *type, const char *file, double w, double h, int bgcolor);
+Rboolean  gdd_new_device_driver(NewDevDesc*, const char*, const char *, double, double, double, int);
 int       gdd_set_new_device_data(NewDevDesc *dd, double gamma_fac, GDDDesc *xd);
 GDDDesc * gdd_alloc_device_desc(double ps);
 

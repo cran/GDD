@@ -47,8 +47,6 @@
   If the \code{name} parameter is set to \code{NULL}, then \code{.GDD.font}
   simply returns the list of font files currently used.
 } 
-\seealso{
-}
 \examples{
 # return currently used fonts
 .GDD.font()

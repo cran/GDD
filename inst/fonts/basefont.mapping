@@ -19,6 +19,11 @@ base.norm:<Helvetica>
 base.bold:<Helvetica:bold>
 base.ital:<Helvetica:italic>
 base.bita:<Helvetica:bold:italic>
+# On MacOS X fontconfig finds the incorrect font, so let's try the
+# system Symbol font first
+symbol:/System/Library/Fonts/Symbol.dfont
+# only then try fontconfig
+symbol:<Symbol>
 
 # the next entries work for Debian systems with msttcorefonts
 # installed (may work with other Linux distros if they use the same

@@ -1,5 +1,5 @@
 /*
- *  GDD - gd-device   (C)2004,5 Simon Urbanek (simon.urbanek@r-project.org)
+ *  GDD - gd-device   (C)2004,5,8 Simon Urbanek (simon.urbanek@r-project.org)
  *
  *  Parts of this code are based on the X11 device skeleton from the R project
  *
@@ -30,7 +30,7 @@ double jGDasp  = 1.0;
    width/heigth
    initps: initial PS
    bgcolor: currently only -1 (transparent) and 0xffffff (white) are really supported */
-Rboolean gdd_new_device_driver(DevDesc *dd, char *type, char *file,
+Rboolean gdd_new_device_driver(NewDevDesc *dd, const char *type, const char *file,
 							   double width, double height, double initps,
 							   int bgcolor)
 {
@@ -54,12 +54,12 @@ Rboolean gdd_new_device_driver(DevDesc *dd, char *type, char *file,
     xd->basefontface = 1;
     xd->basefontsize = initps;
 	
-	if (!GDD_Open((NewDevDesc*)(dd), xd, type, file, width, height, bgcolor)) {
+	if (!GDD_Open(dd, xd, type, file, width, height, bgcolor)) {
 		free(xd);
 		return FALSE;
 	}
 	
-	gdd_set_new_device_data((NewDevDesc*)(dd), 0.6, xd);
+	gdd_set_new_device_data(dd, 0.6, xd);
 	
 	return TRUE;
 }
@@ -74,7 +74,9 @@ int gdd_set_new_device_data(NewDevDesc *dd, double gamma_fac, GDDDesc *xd)
 #ifdef JGD_DEBUG
 	printf("gdd_set_new_device_data\n");
 #endif
+#if R_GE_version < 4
     dd->newDevStruct = 1;
+#endif
 
     /*	Set up Data Structures. */
     setupGDDfunctions(dd);
@@ -137,8 +139,8 @@ SEXP gdd_create_new_device(SEXP args)
     NewDevDesc *dev = NULL;
     GEDevDesc *dd;
     
-    char *devname="GDD";
-	char *type, *file;
+    const char *devname="GDD";
+    const char *type, *file;
 	double width, height, initps;
 	int bgcolor = -1;
 
@@ -179,7 +181,7 @@ SEXP gdd_create_new_device(SEXP args)
 
 	dev->savedSnapshot = R_NilValue;
 
-	if (!gdd_new_device_driver((DevDesc*)(dev), type, file, width, height, initps, bgcolor))
+	if (!gdd_new_device_driver(dev, type, file, width, height, initps, bgcolor))
 	{
 	    free(dev);
 	    error("unable to start device %s", devname);
@@ -189,16 +191,13 @@ SEXP gdd_create_new_device(SEXP args)
 	
 	gsetVar(install(".Device"), mkString(devname), R_NilValue);
 	dd = GEcreateDevDesc(dev);
-	addDevice((DevDesc*) dd);
+	GEaddDevice(dd);
 	GEinitDisplayList(dd);
 #ifdef JGD_DEBUG
-	printf("XGD> devNum=%d, dd=%x\n", devNumber((DevDesc*) dd), dd);
+	printf("XGD> devNum=%d, dd=%x\n", ndevNumber(dd), dd);
 #endif
     
-	PROTECT(v = allocVector(INTSXP, 1));
-	INTEGER(v)[0] = 1 + devNumber((DevDesc*) dd);
-	UNPROTECT(1);
-    return v;
+	return ScalarInteger(1 + GEdeviceNumber(dd));
 }
 
 void gdd_set_display_param(double *par) {

@@ -20,10 +20,14 @@
 #define CREDC(C) ((C)&0xff)
 #define CGREENC(C) (((C)&0xff00)>>8)
 #define CBLUEC(C) (((C)&0xff0000)>>16)
+#define CALPHAC(C) ((C)>>24)
 
 static char *ftprefix=0;
 
 static char *font_file[8] = {0,0,0,0,0,0,0,0};
+
+char *symbol2utf8(const char *c); /* from s2u.c */
+char *unicode2utf8(int u); /* from s2u.c */
 
 static void GDD_Activate(NewDevDesc *dd);
 static void GDD_Circle(double x, double y, double r,
@@ -325,8 +329,12 @@ static void GDD_MetricInfo(int c,  R_GE_gcontext *gc,  double* ascent, double* d
 #ifdef HAS_FTL
 	if (xd->gd_ftm_width<0 || xd->gd_ftm_char!=c) {
 		int br[8];
-		char str[3];
+		char str[6];
 		str[0]=(char)c; str[1]=0;
+		if (gc->fontface == 5)
+			strcpy(str, symbol2utf8(str));
+		else if (c < 0 || c > 128)
+			strcpy(str, unicode2utf8((c < 0)?-c:c));
 		if (!c) { str[0]='M'; str[1]='g'; str[2]=0; /* this should give us reasonable descent (g) and almost max width (M) */ }
 		gdImageStringFT(0, br, xd->gd_draw, xd->gd_ftfont, xd->gd_ftsize, 0.0, 0, 0, str);
 #ifdef JGD_DEBUG
@@ -355,29 +363,29 @@ static void GDD_Mode(int mode, NewDevDesc *dd)
 static void GDD_NewPage(R_GE_gcontext *gc, NewDevDesc *dd)
 {
     GDDDesc *xd = (GDDDesc *) dd->deviceSpecific;
-	int devNr, white;
+	int devNr, gddbg;
     if(!xd || !xd->img) return;
     
-    devNr = devNumber((DevDesc*) dd);
+    devNr = ndevNumber(dd);
 
 	if (xd->img_seq!=-1) /* first request is not saved as this is part of the init */
 		saveActiveImage(xd);
 	xd->img_seq++;
 
-	white = gdTrueColor (255, 255, 255); /* FIXME: we don't respect canvas color here */
-	gdImageFilledRectangle(xd->img, 0, 0, gdImageSX(xd->img), gdImageSY(xd->img), white);
+	gddbg = gdTrueColor(CREDC(xd->canvas), CGREENC(xd->canvas), CBLUEC(xd->canvas));
+	gdImageFilledRectangle(xd->img, 0, 0, gdImageSX(xd->img), gdImageSY(xd->img), gddbg);
 	
     /* this is an exception - we send all GC attributes just after the NewPage command */
     sendGC(xd, gc, 1);
 }
 
-Rboolean GDD_Open(NewDevDesc *dd, GDDDesc *xd,  char *type, char *file, double w, double h, int bgcolor)
+Rboolean GDD_Open(NewDevDesc *dd, GDDDesc *xd,  const char *type, const char *file, double w, double h, int bgcolor)
 {
-	int white;
+    int gddbg;
     
     xd->fill = 0xffffffff; /* transparent, was R_RGB(255, 255, 255); */
     xd->col = R_RGB(0, 0, 0);
-    xd->canvas = R_RGB(255, 255, 255);
+    xd->canvas = bgcolor;
     xd->windowWidth = w;
     xd->windowHeight = h;
     
@@ -388,11 +396,12 @@ Rboolean GDD_Open(NewDevDesc *dd, GDDDesc *xd,  char *type, char *file, double w
 	xd->img_seq=-1;	
 	
 	xd->img = gdImageCreateTrueColor(R2I(w), R2I(h));
-	white = gdTrueColor (255, 255, 255);
-	gdImageFilledRectangle(xd->img, 0, 0, gdImageSX(xd->img), gdImageSY(xd->img), white);
-	gdImageColorTransparent(xd->img, (CONVERT_COLOR(bgcolor)==0x00ffffff)?white:-1); /* if `bg'=="transparent" then white is the transparent color */
+	gddbg = gdTrueColor(CREDC(bgcolor), CGREENC(bgcolor), CBLUEC(bgcolor));
+	gdImageFilledRectangle(xd->img, 0, 0, gdImageSX(xd->img), gdImageSY(xd->img), gddbg);
+	gdImageColorTransparent(xd->img, (CALPHAC(bgcolor) == 0)?gddbg:-1); /* if the background color is fully transparent, then make it the transparency color */
 #ifdef JGD_DEBUG
 	printf("open %dx%d\n", R2I(w), R2I(h));
+	printf(" - bgcolor=%08x, alpha=%x, gddbg=%08x\n", bgcolor, CALPHAC(bgcolor), gddbg);
 #endif
 
 #ifndef HAS_FTL
@@ -448,8 +457,12 @@ static void GDD_Polyline(int n, double *x, double *y,  R_GE_gcontext *gc,  NewDe
 		i++;
 	}
     if (xd->gd_draw!=-1) {
+		if (gc->lty==0) {
 		gdImageSetAntiAliased (xd->img, xd->gd_draw);
 		gdImageOpenPolygon(xd->img, pt, n, gdAntiAliased);
+		} else {
+			gdImageOpenPolygon(xd->img, pt, n, gdStyled);
+		}
 	}
 	free(pt);
 }
@@ -487,6 +500,7 @@ static double GDD_StrWidth(char *str,  R_GE_gcontext *gc,  NewDevDesc *dd)
     GDDDesc *xd = (GDDDesc *) dd->deviceSpecific;
     if(!xd || !xd->img) return strlen(str)*8;
 
+    if (gc->fontface == 5) str = symbol2utf8(str);
 #ifdef HAS_FTL
 	{
 		int br[8];
@@ -504,6 +518,8 @@ static void GDD_Text(double x, double y, char *str,  double rot, double hadj,  R
     if(!xd || !xd->img) return;
         
     checkGC(xd, gc);
+    if (gc->fontface == 5)
+        str = symbol2utf8(str);
 #ifdef JGD_DEBUG
 	printf("text \"%s\" hadj=%f\n", str, hadj);
 #endif
@@ -731,12 +747,12 @@ SEXP gdd_look_up_font(SEXP f)
 	if (!isString(f) || LENGTH(f)<1) error("Font name must be a string.");
 	PROTECT(rv = allocVector(STRSXP, LENGTH(f)));
 	while (i<LENGTH(f)) {
-		char *fn = CHAR(STRING_ELT(f, i));
+		const char *fn = CHAR(STRING_ELT(f, i));
 		gdFTStringExtra se;
 		memset(&se, 0, sizeof(se));
 #ifdef HAS_FTL
 		se.flags = gdFTEX_RETURNFONTPATHNAME | gdFTEX_FONTCONFIG;
-		gdImageStringFTEx(0, 0, 0, fn, 10.0, 0.0, 10, 10, "bla", &se);
+		gdImageStringFTEx(0, 0, 0, (char*)fn, 10.0, 0.0, 10, 10, "bla", &se);
 		if (se.fontpath) {
 			SET_STRING_ELT(rv, i, mkChar(se.fontpath));
 			gdFree(se.fontpath);
@@ -769,6 +785,12 @@ void setupGDDfunctions(NewDevDesc *dd) {
     dd->polygon = GDD_Polygon;
     dd->locator = GDD_Locator;
     dd->mode = GDD_Mode;
-    dd->hold = GDD_Hold;
     dd->metricInfo = GDD_MetricInfo;
+#if R_GE_version >= 4
+    dd->hasTextUTF8 = TRUE;
+    dd->strWidthUTF8 = GDD_StrWidth;
+    dd->textUTF8 = GDD_Text;
+#else
+    dd->hold = GDD_Hold;
+#endif
 }

@@ -40,9 +40,10 @@ AC_FUNC_MALLOC
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS([memset mkdir rmdir])
 
-AC_PATH_PROG([GDLIBCONF],[gdlib-config],[$PATH:/usr/local/bin:ext/bin:ext])
+AC_PATH_PROG([GDLIBCONF],[gdlib-config],,,[$PATH:/usr/local/bin:ext/bin:ext])
 
 if test "xx$GDLIBCONF" != "xx"; then
+## configuration according to gdlib-config
 
 GDCFLAGS=`$GDLIBCONF --cflags`
 GDLIBS=`$GDLIBCONF --libs`
@@ -68,55 +69,85 @@ echo "if that is not correct, fix your gd installation"
 AC_CHECK_HEADER(gd.h,[],AC_MSG_ERROR(Can't find gd.h!))
 AC_CHECK_LIB(gd, gdImageCreateFromPng,[],AC_MSG_ERROR(Can't find libgd!))
 
+has_ft=no
+
 AC_MSG_CHECKING([usability of FreeType in GD])
 AC_LINK_IFELSE([
 #include "gd.h"
 int main(void) {
+    gdFTStringExtra se;
+    se.flags = gdFTEX_RETURNFONTPATHNAME | gdFTEX_FONTCONFIG;
     gdImageStringFT(0, 0, 0, "bla", 12.0, 0.0, 10, 10, "foo");
     return 0;
 }
 ],[
 AC_DEFINE(HAS_FTL, 1, [is freetype library available?])
 AC_MSG_RESULT(yes)
+has_ft=yes
 ],[AC_MSG_RESULT(no)
+has_ft=no
 echo ""
-echo "*** freetype is not available for GD, only very basic font support ***"
+echo "*** FreeType is not available for GD, only very basic font support ***"
 echo "*** will be included. You can enhance the quality of GDD images by ***"
 echo "*** installing freetype library and the corresponding GD.          ***"
+echo "*** You must use gd 2.0.29 or higher for FreeType support.         ***"
 echo ""
 ])
 
 else
+## gdlib-config is not available, go for a hunt on our own
+AC_MSG_WARN([gdlib-config is missing, make sure gd >=2.0.29 is installed properly! Trying without glib-config.])
+
 AC_CHECK_LIB(m, floor)
 AC_CHECK_LIB(z, deflate)
+
+AC_PATH_PROG([PKGCONFIG],[pkg-config],,,[$PATH:/usr/local/bin:ext/bin:ext])
 
 dnl ****************** Begin PNG checking ***********************
 if test "x$with_png" != "x"; then
   PNG_DIR=$with_png
   for i in / /include /include/png /png; do
-     test -f $with_png/$i/png.h           && PNG_INCDIR=$with_png/$i
+     test -f ${with_png}$i/png.h           && PNG_INCDIR=${with_png}$i
   done
   test -f $with_png/lib/libpng.a -o -f $with_png/lib/libpng.so -o -f $with_png/lib/libpng.dylib && PNG_LIBDIR=$with_png/lib
   test -f $with_png/libpng.a -o -f $with_png/libpng.so -o -f $with_png/libpng.dylib && PNG_LIBDIR=$with_png
 else
-  for i in /usr/include /usr/local/include; do
-    test -f $i/png.h                       && PNG_INCDIR=$i
-  done
-  for i in /usr /usr/local /usr/local/png; do
-    test -f $i/lib/libpng.a -o -f $i/lib/libpng.so && PNG_LIBDIR=$i/lib
-  done
+  if test -n "${PKGCONFIG}"; then
+    AC_MSG_CHECKING([whether pkg-config knows about libpng])
+    if ${PKGCONFIG} libpng; then
+      PNG_CPPFLAGS=`${PKGCONFIG} --cflags libpng`
+      PNG_LDFLAGS=`${PKGCONFIG} --libs libpng`
+      AC_MSG_RESULT([yes])
+    else
+      AC_MSG_RESULT([no])
+    fi
+  fi
+  if test -z "{PNG_CPPFLAGS}"; then
+    for i in /usr/include /usr/local/include; do
+      test -f $i/png.h                       && PNG_INCDIR=$i
+    done
+    for i in /usr /usr/local /usr/local/png; do
+      test -f $i/lib/libpng.a -o -f $i/lib/libpng.so && PNG_LIBDIR=$i/lib
+    done
+  fi
 fi
 
-if test "x$PNG_INCDIR" == "x"; then
+if test "x$PNG_INCDIR" = x; then
    PNG_INCDIR=`pwd`/ext/include
 fi
-if test "x$PNG_LIBDIR" == "x"; then
+if test "x$PNG_LIBDIR" = x; then
    PNG_LIBDIR=`pwd`/ext/lib
 fi
+if test "x${PNG_CPPFLAGS}" = x; then
+  PNG_CPPFLAGS="-I${PNG_INCDIR}"
+fi
+if test "x${PNG_LDFLAGS}" = x; then
+  PNG_LDFLAGS="-L${PNG_LIBDIR}"
+fi
 
-LDFLAGS="-L$PNG_LIBDIR $LDFLAGS"
+LDFLAGS="${PNG_LDFLAGS} $LDFLAGS"
 dnl CFLAGS="-I$PNG_INCDIR $CFLAGS"
-CPPFLAGS="$CPPFLAGS -I$PNG_INCDIR"
+CPPFLAGS="$CPPFLAGS ${PNG_CPPFLAGS}"
 
 AC_CHECK_HEADER(png.h,[],AC_MSG_ERROR(Can't find png.h!))
 AC_CHECK_LIB(png, png_read_info)
@@ -158,6 +189,7 @@ PREGDL=$LIBS
 AC_CHECK_LIB(gd, gdImageCreateFromPng,[],AC_MSG_ERROR(Can't find libgd!))
 dnl ****************** End GD checking ***********************
 
+has_ft=no
 AC_CHECK_LIB(iconv, libiconv)
 AC_CHECK_LIB(freetype, FT_New_Face, [
 OLIBS=$LIBS
@@ -166,26 +198,38 @@ AC_MSG_CHECKING([usability of FT in GD])
 AC_LINK_IFELSE([
 #include "gd.h"
 int main(void) {
+    gdFTStringExtra se;
+    se.flags = gdFTEX_RETURNFONTPATHNAME | gdFTEX_FONTCONFIG;
     gdImageStringFT(0, 0, 0, "bla", 12.0, 0.0, 10, 10, "foo");
     return 0;
 }
 ],[
 AC_DEFINE(HAS_FTL, 1, [is freetype library available?])
+has_ft=yes
 AC_MSG_RESULT(looks good)
 ],[
 LIBS="-lgd -lfreetype -lfontconfig $PREGDL"
 AC_LINK_IFELSE([
 #include "gd.h"
 int main(void) {
+    gdFTStringExtra se;
+    se.flags = gdFTEX_RETURNFONTPATHNAME | gdFTEX_FONTCONFIG;
     gdImageStringFT(0, 0, 0, "bla", 12.0, 0.0, 10, 10, "foo");
     return 0;
 }
 ],[
 AC_DEFINE(HAS_FTL, 1, [is freetype library available?])
+has_ft=yes
 AC_MSG_RESULT(needs fontconfig, but looks good)
 ],[
 LIBS=$OLIBS
 AC_MSG_RESULT(not usable)
+echo ""
+echo "*** FreeType library is unusable or your gd version is too old!   ***"
+echo "*** You will need gd 2.0.29 or higher to enable FreeType support. ***"
+echo "*** GDD without FreeType support will result in very bad text     ***"
+echo "*** output (if any at all).                                       ***"
+echo ""
 ])
 ])
 ])
@@ -197,10 +241,11 @@ AC_LINK_IFELSE([
 #include "gd.h"
 int main(void) {
     gdImagePtr o;
+    gdImageOpenPolygon(0, 0, 0, 0);
     return 0;
 }
 	],[AC_MSG_RESULT(yes)],
-	[AC_MSG_ERROR([Cannot compile a simple GD program. See config.log for details.])])
+	[AC_MSG_ERROR([Cannot compile a simple GD program. Make sure you have gd 2.0.29 or higher! See config.log for details.])])
 
 CPPFLAGS="$CPPFLAGS -DHAVE_GDDCONFIG_H"
 

@@ -7,7 +7,7 @@ support of anti-aliasing of text+lines and the fact that neither X11
 nor gs is needed.
 
 Requirements:
-- libgd 2.0.28 or higher, with PNG, JPEG and GIF support
+- libgd 2.0.29 or higher, with PNG, JPEG and GIF support
 - freetype2 (optional, but without it the text output will be really bad)
 
 Important: For licensing reasons the GDD package doesn't include TTF
