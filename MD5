@@ -1,0 +1,21 @@
+9e4cc287d63484e954d36a32131f943c *DESCRIPTION
+1de8ddbf5e2ccb08e95c3745e35aebba *NEWS
+b1a042a0dbc3761b4c30de406051e86c *R/GDD.R
+1b9b95e885ac9e29841ea183570a7ec7 *R/zzz.R
+08dcbeb4d4c2460a11e9822389bf3d43 *README
+9a0cf43363d659f158e7e943a6e97f94 *configure
+db9a042a2294742e21dc0cd4ace011b1 *configure.ac
+a4c464b5d337484323fe23a5c913781b *configure.win
+fbb0d0ade0afc366d03c0d4cbab11127 *inst/fonts/basefont.mapping
+1e99e2462fa272c422a7ee3c4970a7d6 *inst/fonts/blue highway free.ttf
+ed7dc59079f3279a1754584d9d2bd6e2 *man/GDD.Rd
+9781db41701ca0112fa42ccaf90be936 *man/GDDfont.Rd
+d6a5c31575f13250486ebdef426c067b *src/GDD.c
+50d21669fc261e52abf668b0f9b1369d *src/GDD.h
+5a31b48741693908b09d1d6da65bf998 *src/GDDtalk.c
+4a74ba74373c3e707a127946f6f0cb92 *src/GDDtalk.h
+24af205d0cc1d74f90f859a0f54792f1 *src/Makevars.in
+81cdea547c6b18d5a81373ac21c24544 *src/Makevars.win
+86d6c32f26e7aa0838ff67a41ac54928 *src/gddconfig.h.in
+c56df0d76c54197fdb15dbb3cce3325e *src/s2u.c
+eebc09720fb9d6b582126dca3ac693be *version

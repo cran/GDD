@@ -1,6 +1,5 @@
 #include "GDD.h"
 #include "GDDtalk.h"
-#include <Rversion.h>
 
 #include <gdfonts.h>
 
@@ -13,7 +12,7 @@
 /* Device Driver Actions */
 
 #if R_VERSION < 0x10900
-#error This GDD needs at least R version 1.9.0
+#error "This GDD needs at least R version 1.9.0"
 #endif
 
 #if R_GE_version < 4

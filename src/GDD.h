@@ -1,7 +1,7 @@
 #ifndef _DEV_GD_H
 #define _DEV_GD_H
 
-#define GDD_VER 0x00010c /* GDD v0.1-12 */
+#define GDD_VER 0x00010d /* GDD v0.1-13 */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -11,6 +11,7 @@
 #endif
 
 #include <R.h>
+#include <Rversion.h>
 #include <Rinternals.h>
 #include <R_ext/GraphicsEngine.h>
 #include <R_ext/GraphicsDevice.h>
@@ -26,6 +27,11 @@
 #define ndevNumber(X) devNumber((DevDesc*)(X))
 #define GEkillDevice(X) KillDevice(X)
 #define desc2GEDesc(X) ((DevDesc*) GetDevice(devNumber((DevDesc*) (X))))
+#endif
+#if R_VERSION >= R_Version(2,8,0)
+#ifndef NewDevDesc
+#define NewDevDesc DevDesc
+#endif
 #endif
 
 /* the internal representation of a color in this (R) API is RGBa with a=0 meaning transparent and a=255 meaning opaque (hence a means 'opacity'). previous implementation was different (inverse meaning and 0x80 as NA), so watch out. */
