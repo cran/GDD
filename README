@@ -1,0 +1,63 @@
+ GDD - GD Graphics device
+==========================
+
+This device produces bitmap output using libgd (aka gd library). Main
+advantages compared to the "native" R bitmap drivers are speed,
+support of anti-aliasing of text+lines and the fact that neither X11
+nor gs is needed.
+
+Requirements:
+- libgd 2.0.28 or higher, with PNG, JPEG and GIF support
+- freetype2 (optional, but without it the text output will be really bad)
+
+Important: For licensing reasons the GDD package doesn't include TTF
+fonts which are recommended to achieve the best results. Please read
+the last section in this file on how to get them if they are not
+installed already.
+
+(On Debian systems, use:
+  apt get install msttcorefonts libgd2-xpm-dev
+to satisfy all requirements above - other distributions are likely to have
+similar packages available.)
+
+Since GDD 0.1-6 msttcorefonts may not be necessary if fontconfig is
+setup properly and you have other, Helvetica-equivalent True Type font
+in your system.
+
+Tested on unix platforms only (Linux and Mac OS X), it may or may not
+work on other systems - given libgd availability. Success/failure
+reports are always welcome.
+
+When installing from sources (which is the default), make sure you
+have development files (headers etc.) also installed. Also note that
+the capabilities of this driver are determined by libgd and not at GDD
+compile time, i.e. if you have libgd without freetype support,
+installing freetype doesn't help unless you update libgd, too.
+
+--
+
+TrueType Fonts: libgd supports TTF in conjunction with freetype. R
+usually uses fixed font family for all texts and GDD allows the user
+to specify which fonts will be used. The file basefont.mapping in the
+"fonts" directory of the installed GDD package lists places where GDD
+will look for font files. Currently the recommened use of GDD is in
+conjunction with the Arial font from the Microsoft True Type Core
+Fonts for the Web. Those can be freely redistributed, but cannot be
+included in any package, so you have to download and extract them on
+your own. Some Linux distributions, such as Debian offer a package
+doing exactly this - downloading the fonts and extracting them. If
+your distribution or operating system doesn't provide such tools, the
+fonts and corresponding scripts can be obtained from:
+http://corefonts.sourceforge.net/
+Once unpacked, modify the basefont.mapping file of GDD to reflect the
+location of the font files.
+
+Since GDD 0.1-6 it is possible to let fontconfig search for suitable
+fonts. Instead of using file names, it is possible to put fontconfig
+font patterns in < > and GDD will search for them, for example
+base.bold:<Arial:bold>
+Will try to locate bold Arial for or any quivalent in your system.
+
+Alternatively any TrueType or Type 1 fonts can be used. Test your
+favorite font - it may work. If you have better idea as of how to
+handle the fonts, please feel free to contact me.

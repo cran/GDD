@@ -1,0 +1,44 @@
+# Font mappings for GDD
+#-----------------------
+# Fonts files specified here will be used by the GDD device. The
+# supported entries are "base.norm" for regular base font, "base.bold"
+# for bold base font, "base.ital" for italic base font and "base.bita"
+# for bold, italic base font.
+#
+# This file is processed in greedy manner, i.e. if the file specified
+# in the entry matches, then that font file will be used. Once all
+# necessary font types are matched, the loading stops.
+
+# Note: since 0.1-6 it is possible to look up the path via fontconfig.
+#       use <Font> instead of the path, e.g. <Arial:bold>
+
+# If fontconfig is installed and gd is 2.0.29 or higher, then the following
+# should match in any case
+base.norm:<Helvetica>
+base.bold:<Helvetica:bold>
+base.ital:<Helvetica:italic>
+base.bita:<Helvetica:bold:italic>
+
+# the next entries work for Debian systems with msttcorefonts
+# installed (may work with other Linux distros if they use the same
+# location for MS core fonts)
+base.norm:/usr/share/fonts/truetype/msttcorefonts/arial.ttf
+base.bold:/usr/share/fonts/truetype/msttcorefonts/arialbd.ttf
+base.ital:/usr/share/fonts/truetype/msttcorefonts/ariali.ttf
+base.bita:/usr/share/fonts/truetype/msttcorefonts/arialbi.ttf
+
+#--- add your section here if you have some nice TTFs ---
+#base.norm:
+#base.ital:
+#base.bold:
+#base.bita:
+
+# this is the ultimate fallback - supplied free fonts
+# there is no italic versions and regular font is used if bold cannot
+# be found
+base.norm:blue highway free.ttf
+base.bold:blue highway free bold.ttf
+base.bold:blue highway free.ttf
+base.ital:blue highway free.ttf
+base.bita:blue highway free bold.ttf
+base.bita:blue highway free.ttf

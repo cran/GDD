@@ -1,0 +1,9 @@
+#!/bin/sh
+
+PNAME=GDD
+VER=`awk -v ORS= '/GDD v/ { print substr($6,2) }' src/GDD.h`
+if test "$1" == "-f"; then 
+    echo "${PNAME}_${VER}.tar.gz"
+else
+    echo "${VER}"
+fi
