@@ -60,9 +60,9 @@ symbol:%WINDOWSFONTS%/symbol.ttf
 # this is the ultimate fallback - supplied free fonts
 # there is no italic versions and regular font is used if bold cannot
 # be found
-base.norm:blue highway free.ttf
-base.bold:blue highway free bold.ttf
-base.bold:blue highway free.ttf
-base.ital:blue highway free.ttf
-base.bita:blue highway free bold.ttf
-base.bita:blue highway free.ttf
+base.norm:blue_highway_free.ttf
+base.bold:blue_highway_free bold.ttf
+base.bold:blue_highway_free.ttf
+base.ital:blue_highway_free.ttf
+base.bita:blue_highway_free bold.ttf
+base.bita:blue_highway_free.ttf

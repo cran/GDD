@@ -1,4 +1,5 @@
-9e4cc287d63484e954d36a32131f943c *DESCRIPTION
+2ad365d9e315872264a15b3677136176 *DESCRIPTION
+9fdfeb11f7ddba6f3aab9aaa6b1ac5dd *NAMESPACE
 1de8ddbf5e2ccb08e95c3745e35aebba *NEWS
 b1a042a0dbc3761b4c30de406051e86c *R/GDD.R
 1b9b95e885ac9e29841ea183570a7ec7 *R/zzz.R
@@ -6,13 +7,13 @@ b1a042a0dbc3761b4c30de406051e86c *R/GDD.R
 9a0cf43363d659f158e7e943a6e97f94 *configure
 db9a042a2294742e21dc0cd4ace011b1 *configure.ac
 a4c464b5d337484323fe23a5c913781b *configure.win
-fbb0d0ade0afc366d03c0d4cbab11127 *inst/fonts/basefont.mapping
-1e99e2462fa272c422a7ee3c4970a7d6 *inst/fonts/blue highway free.ttf
+80eeba5f7e646213f3f90d6c7f298b22 *inst/fonts/basefont.mapping
+1e99e2462fa272c422a7ee3c4970a7d6 *inst/fonts/blue_highway_free.ttf
 ed7dc59079f3279a1754584d9d2bd6e2 *man/GDD.Rd
 9781db41701ca0112fa42ccaf90be936 *man/GDDfont.Rd
 d6a5c31575f13250486ebdef426c067b *src/GDD.c
 50d21669fc261e52abf668b0f9b1369d *src/GDD.h
-5a31b48741693908b09d1d6da65bf998 *src/GDDtalk.c
+3d7ae2ea9b5195f9865a4d59c5dd1319 *src/GDDtalk.c
 4a74ba74373c3e707a127946f6f0cb92 *src/GDDtalk.h
 24af205d0cc1d74f90f859a0f54792f1 *src/Makevars.in
 81cdea547c6b18d5a81373ac21c24544 *src/Makevars.win

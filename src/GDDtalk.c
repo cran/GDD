@@ -156,7 +156,7 @@ static void sendGC(GDDDesc *xd, R_GE_gcontext *gc, int sendAll) {
 			fallback_font = (char*) malloc(strlen(ftprefix)+32);
 			strcpy(fallback_font, ftprefix);
 			if (fc!='/' && fc!='\\') strcat(fallback_font, "/");
-			strcat(fallback_font, "blue highway free.ttf");
+			strcat(fallback_font, "blue_highway_free.ttf");
 		}
 		if (gc->fontface>0 && gc->fontface<=5 && font_file[gc->fontface-1])
 			xd->gd_ftfont = font_file[gc->fontface-1];
@@ -167,7 +167,7 @@ static void sendGC(GDDDesc *xd, R_GE_gcontext *gc, int sendAll) {
 				if (fallback_font)
 					xd->gd_ftfont = fallback_font;
 				else
-					xd->gd_ftfont = "blue highway free.ttf";
+					xd->gd_ftfont = "blue_highway_free.ttf";
 			}
 		}
 		xd->gd_ftsize=gc->ps*gc->cex;
